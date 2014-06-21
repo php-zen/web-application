@@ -1,0 +1,37 @@
+{
+    "name": "zen/web-application",
+    "description": "Web Application support of Zen framework.",
+    "version": "1.0.0-dev",
+    "keywords": [
+        "framework",
+        "zen"
+    ],
+    "license": "LGPL-3.0+",
+    "authors": [
+        {
+            "name": "Snakevil Zen",
+            "email": "zsnakevil@gmail.com",
+            "role": "Director"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "zen/core": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zen\\Web\\Application\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ZenTest\\Web\\Application\\": "share/test/"
+        }
+    },
+    "minimum-stability": "dev",
+    "archive": {
+        "exclude": [
+            "/share"
+        ]
+    }
+}
