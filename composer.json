@@ -11,11 +11,10 @@
         {
             "name": "Snakevil Zen",
             "email": "zsnakevil@gmail.com",
-            "role": "Director"
+            "role": "Leader"
         }
     ],
     "require": {
-        "php": ">=5.3.0",
         "zen/core": "*"
     },
     "autoload": {
@@ -28,7 +27,6 @@
             "ZenTest\\Web\\Application\\": "share/test/"
         }
     },
-    "minimum-stability": "dev",
     "archive": {
         "exclude": [
             "/share"
