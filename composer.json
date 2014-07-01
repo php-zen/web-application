@@ -1,7 +1,7 @@
 {
     "name": "zen/web-application",
     "description": "Web Application support of Zen framework.",
-    "version": "1.0.0-dev",
+    "version": "0.1.0-dev",
     "keywords": [
         "zen"
     ],

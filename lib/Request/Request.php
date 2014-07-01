@@ -29,8 +29,6 @@ class Request extends ZenCoreApp\Input\Input implements ZenWebApp\IRequest
         parent::__construct();
         $this->params['get'] = $_GET;
         $this->params['post'] = $_POST;
-        $this->params['server'] = $_SERVER;
-        $this->params['env'] = $_ENV;
     }
 
     /**
