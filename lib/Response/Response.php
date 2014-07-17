@@ -60,6 +60,10 @@ class Response extends ZenCoreApp\Output\Output implements ZenWebApp\IResponse
             $s_status = $this->status();
             header('Status: ' . $s_status, true, $this->status);
             foreach ($this->headers as $kk => $vv) {
+                if (1 == count($vv)) {
+                    header($kk . ': ' . $vv[0], true, $this->status);
+                    continue;
+                }
                 foreach ($vv as $ww) {
                     header($kk . ': ' . $ww, false, $this->status);
                 }
@@ -174,7 +178,7 @@ class Response extends ZenCoreApp\Output\Output implements ZenWebApp\IResponse
      */
     final public function header($field, $value, $multiply = false)
     {
-        if ($multiply || !array_key_exists($field, $this->headers)) {
+        if (!$multiply || !array_key_exists($field, $this->headers)) {
             $this->headers[$field] = array($value);
         } else {
             $this->headers[$field][] = $value;
