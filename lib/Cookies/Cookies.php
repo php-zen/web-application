@@ -52,7 +52,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
             $this->meta = json_decode($this->data['_zcmt_'], true);
         }
         if (!is_array($this->meta)) {
-            $this->meta = array();
+            $this->meta = array('' => crypt(mt_rand(), mt_rand()));
         }
         $this->changes = array();
     }
@@ -104,9 +104,28 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
      */
     protected function decodeValue($name, $value)
     {
-        return isset($this->meta[$name]) && 2 & $this->meta[$name][3]
-            ? unserialize($value)
-            : $value;
+        if (isset($this->meta[$name])) {
+            if (isset($this->meta['']) && 4 & $this->meta[$name][3]) {
+                $value = base64_decode($value);
+                if ($value) {
+                    $i_lend = strlen($value);
+                    $i_lens = strlen($this->meta['']);
+                    $i_offs = $this->meta[$name][0]
+                        ? ord($this->meta[$name][0][1]) % $i_lens
+                        : 0;
+                    for ($ii = 0; $ii < $i_lend; $ii++) {
+                        $jj = ($ii + $i_offs) % $i_lens;
+                        $value[$ii] = chr(ord($value[$ii]) ^ ord($this->meta[''][$jj]));
+                    }
+                    $value = gzinflate($value);
+                }
+            }
+            if (2 & $this->meta[$name][3]) {
+                $value = @unserialize($value);
+            }
+        }
+
+        return $value;
     }
 
     /**
@@ -141,7 +160,9 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     public function offsetSet($offset, $value)
     {
         if (!$value instanceof Cookie\Cookie) {
-            $value = new Cookie\Cookie($value);
+            $value = is_scalar($value)
+                ? new Cookie\Cookie($value)
+                : new Cookie\SecretCookie($value);
         }
         $this->data[$offset] = $value;
         $this->diff[$offset] = $value;
@@ -149,7 +170,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
             $this->encodeExpiration($value->getExpiration()),
             $value->getPath(),
             $value->getDomain(),
-            !is_scalar($value->getValue()) << 1 | $value->getSecure()
+            ($value instanceof Cookie\SecretCookie) << 2 | !is_scalar($value->getValue()) << 1 | $value->getSecure()
         );
     }
 
@@ -162,7 +183,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     protected function encodeExpiration($expire)
     {
         return $expire
-            ? base64_decode(pack('V', $expire->getTimestamp()))
+            ? rtrim(base64_encode(pack('V', $expire->getTimestamp())), '=')
             : '';
     }
 
@@ -220,12 +241,11 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
         if (!empty($this->diff)) {
             if (empty($this->meta)) {
                 $a_cookie = array('_zcmt_=deleted');
-                $a_cookie[] = 'expire=Thursday, 01-Jan-1970 00:00:01 UTC';
+                $a_cookie[] = 'expire=Thu, 01-Jan-1970 00:00:00 GMT';
                 $a_cookie[] = 'Max-age=0';
             } else {
                 $a_cookie = array('_zcmt_=' . $this->quote(json_encode($this->meta)));
-                $a_cookie[] = 'expire=Thursday, 31-Dec-2037 23:55:55 UTC';
-                $a_cookie[] = 'Max-age=315360000';
+                $a_cookie[] = 'expire=Thu, 31-Dec-2037 23:55:55 GMT';
             }
             $response->header('Set-Cookie', implode('; ', $a_cookie), true);
         }
@@ -239,12 +259,36 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
      * @param  string $name  名称。
      * @param  mixed  $value 值。
      * @return string
+     *
+     * @throws ExCookieTooLong 当 COOKIE 值过长时
      */
     protected function encodeValue($name, $value)
     {
-        return 2 & $this->meta[$name][3]
-            ? $this->quote(serialize($value))
-            : $value;
+        if (2 & $this->meta[$name][3]) {
+            $value = serialize($value);
+        }
+        if (4 & $this->meta[$name][3]) {
+            if (!isset($this->meta[''])) {
+                $this->meta[''] = crypt(mt_rand(), mt_rand());
+            }
+            $value = gzdeflate($value, 9);
+            $i_lend = strlen($value);
+            $i_lens = strlen($this->meta['']);
+            $i_offs = $this->meta[$name][0]
+                ? ord($this->meta[$name][0][1]) % $i_lens
+                : 0;
+            for ($ii = 0; $ii < $i_lend; $ii++) {
+                $jj = ($ii + $i_offs) % $i_lens;
+                $value[$ii] = chr(ord($value[$ii]) ^ ord($this->meta[''][$jj]));
+            }
+            $value = rtrim(base64_encode($value), '=');
+        }
+        $value = quote($value);
+        if (4094 < strlen($name . $value)) {
+            throw new ExCookieTooLong($name);
+        }
+
+        return $value;
     }
 
     /**
@@ -255,6 +299,10 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
      */
     protected function quote($clob)
     {
-        return str_replace(array(' ', ';', "\r", "\n"), array('%2b', '%3b', '%0d', '%0a'), $clob);
+        return str_replace(
+            array(' ', '+', ';', "\r", "\n"),
+            array('%20', '%2b', '%3b', '%0d', '%0a'),
+            $clob
+        );
     }
 }
