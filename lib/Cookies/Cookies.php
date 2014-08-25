@@ -131,12 +131,14 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
      *
      * @param  scalar $offset 名称
      * @return void
+     *
+     * @throws ExCookieMetaMissing 当 COOKIE 元信息丢失时
      */
     public function offsetUnset($offset)
     {
         if ($this->offsetExists($offset)) {
             if (!isset($this->meta[$offset])) {
-                throw new ExMetaMissing($offset);
+                throw new ExCookieMetaMissing($offset);
             }
             $this->diff[$offset] = new Cookie\Cookie(
                 'deleted',
