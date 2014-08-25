@@ -81,16 +81,9 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
                 if (!isset($this->meta[$offset])) {
                     $this->data[$offset] = new Cookie\Cookie($this->data[$offset]);
                 } else {
-                    if ($this->meta[$offset][0]) {
-                        $a_ts = unpack('V', base64_decode($this->meta[$offset][0]));
-                        $o_expire = new ZenCore\Type\DateTime;
-                        $o_expire->setTimestamp($a_ts[1]);
-                    } else {
-                        $o_expire = null;
-                    }
                     $this->data[$offset] = new Cookie\Cookie(
-                        $this->data[$offset],
-                        $o_expire,
+                        $this->decodeValue($offset, $this->data[$offset]),
+                        $this->decodeExpiration($offset, $this->meta[$offset][0]),
                         $this->meta[$offset][1],
                         $this->meta[$offset][2],
                         $this->meta[$offset][3]
@@ -99,6 +92,42 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
             }
 
             return $this->data[$offset];
+        }
+    }
+
+    /**
+     * 解码值。
+     *
+     * @param  string $name  名称
+     * @param  string $value 代码
+     * @return mixed
+     */
+    protected function decodeValue($name, $value)
+    {
+        return isset($this->meta[$name]) && 2 & $this->meta[$name][3]
+            ? unserialize($value)
+            : $value;
+    }
+
+    /**
+     * 解码过期时间。
+     *
+     * @param  string                $name COOKIE 名
+     * @param  string                $code 代码
+     * @return ZenCore\Type\DateTime
+     *
+     * @throws ExIllegalExpiration 当过期时间解码失败时
+     */
+    protected function decodeExpiration($name, $code)
+    {
+        if ($code) {
+            $code = base64_decode($code);
+            if (4 != strlen($code)) {
+                throw new ExIllegalExpiration($name);
+            }
+            $a_fields = unpack('V', $code);
+
+            return new ZenCore\Type\DateTime($a_fields[1]);
         }
     }
 
@@ -117,13 +146,24 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
         $this->data[$offset] = $value;
         $this->diff[$offset] = $value;
         $this->meta[$offset] = array(
-            $value->getExpiration()
-                ? base64_encode(pack('V', $value->getExpiration()->getTimestamp()))
-                : '',
+            $this->encodeExpiration($value->getExpiration()),
             $value->getPath(),
             $value->getDomain(),
-            (int) $value->getSecure()
+            !is_scalar($value->getValue()) << 1 | $value->getSecure()
         );
+    }
+
+    /**
+     * 编码过期时间。
+     *
+     * @param  ZenCore\Type\DateTime $expire 过期时间
+     * @return string
+     */
+    protected function encodeExpiration($expire)
+    {
+        return $expire
+            ? base64_decode(pack('V', $expire->getTimestamp()))
+            : '';
     }
 
     /**
@@ -161,7 +201,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     {
         /** @var $jj Cookie\Cookie **/
         foreach ($this->diff as $ii => $jj) {
-            $a_cookie = array($ii . '=' . $jj->value);
+            $a_cookie = array($ii . '=' . $this->encodeValue($ii, $jj->getValue()));
             if (null !== $jj->getExpiration()) {
                 $a_cookie[] = 'expire=' . $jj->getExpiration()->format(DATE_COOKIE);
                 $a_cookie[] = 'Max-age=' . max(0, $jj->getExpiration()->getTimestamp() - time());
@@ -183,7 +223,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
                 $a_cookie[] = 'expire=Thursday, 01-Jan-1970 00:00:01 UTC';
                 $a_cookie[] = 'Max-age=0';
             } else {
-                $a_cookie = array('_zcmt_=' . json_encode($this->meta));
+                $a_cookie = array('_zcmt_=' . $this->quote(json_encode($this->meta)));
                 $a_cookie[] = 'expire=Thursday, 31-Dec-2037 23:55:55 UTC';
                 $a_cookie[] = 'Max-age=315360000';
             }
@@ -191,5 +231,30 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
         }
 
         return $this;
+    }
+
+    /**
+     * 编码值。
+     *
+     * @param  string $name  名称。
+     * @param  mixed  $value 值。
+     * @return string
+     */
+    protected function encodeValue($name, $value)
+    {
+        return 2 & $this->meta[$name][3]
+            ? $this->quote(serialize($value))
+            : $value;
+    }
+
+    /**
+     * 转义字符串以确保 COOKIE 读写成功。
+     *
+     * @param  string $clob
+     * @return string
+     */
+    protected function quote($clob)
+    {
+        return str_replace(array(' ', ';', "\r", "\n"), array('%2b', '%3b', '%0d', '%0a'), $clob);
     }
 }
