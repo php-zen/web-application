@@ -72,22 +72,72 @@ abstract class Application extends ZenApp\Application
     /**
      * {@inheritdoc}
      *
-     * @internal
-     *
-     * @return void
-     */
-    final protected function zenExtend()
-    {
-    }
-
-    /**
-     * {@inheritdoc}
-     *
      * @param  array         $routes 路由表
      * @return Router\Router
      */
     protected function newDefaultRouter($routes)
     {
         return new Router\Router($routes);
+    }
+
+    /**
+     * COOKIE 组件实例。
+     *
+     * @internal
+     *
+     * @var ICookies
+     */
+    protected $cookies;
+
+    /**
+     * 获取 COOKIE 组件。
+     *
+     * @return ICookies
+     */
+    final public function getCookies()
+    {
+        return $this->cookies;
+    }
+
+    /**
+     * 判断指定类是否为有效的 COOKIE 信息组件。
+     *
+     * @internal
+     *
+     * @param  string $class 类名
+     * @return bool
+     */
+    protected function isValidCookiesType($class)
+    {
+        return is_subclass_of($class, __NAMESPACE__ . '\ICookies');
+    }
+
+    /**
+     * 创建默认的 COOKIES 信息组件的实例。
+     *
+     * @return ICookies
+     */
+    protected function newDefaultCookies()
+    {
+        return new Cookies\Cookies;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @internal
+     *
+     * @return void
+     */
+    final protected function zenExtend()
+    {
+        if (!$this->cookies) {
+            $this->cookies =
+                isset($this->config['appliance.cookies']) &&
+                $this->isValidCookiesType($this->config['appliance.cookies'])
+                    ? new $this->config['appliance.cookies']
+                    : $this->newDefaultCookies();
+            $this->output->withCookies($this->cookies);
+        }
     }
 }

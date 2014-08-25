@@ -50,27 +50,92 @@ class Response extends ZenCoreApp\Output\Output implements ZenWebApp\IResponse
     }
 
     /**
-     * {inheritdoc}
+     * {@inheritdoc}
      *
+     * @param  string $field    头字段名
+     * @param  string $value    信息值
+     * @param  bool   $multiply 可选。是否发送重名头信息
      * @return self
      */
-    public function close()
+    final public function header($field, $value, $multiply = false)
     {
-        if (!$this->closed) {
-            $s_status = $this->status();
-            header('Status: ' . $s_status, true, $this->status);
-            foreach ($this->headers as $kk => $vv) {
-                if (1 == count($vv)) {
-                    header($kk . ': ' . $vv[0], true, $this->status);
-                    continue;
-                }
-                foreach ($vv as $ww) {
-                    header($kk . ': ' . $ww, false, $this->status);
-                }
-            }
+        if (!$multiply || !array_key_exists($field, $this->headers)) {
+            $this->headers[$field] = array($value);
+        } else {
+            $this->headers[$field][] = $value;
         }
 
-        return parent::close();
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param  string $uri         目标 URI
+     * @param  bool   $permanently 可选。是否为永久跳转
+     * @return self
+     */
+    final public function redirect($uri, $permanently = false)
+    {
+        return $this->state($permanently ? self::STATUS_MOVED_PERMANENTLY : self::STATUS_FOUND)
+            ->header('Location', $uri)
+            ->close();
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param  int  $code 新状态值
+     * @return self
+     */
+    final public function state($code)
+    {
+        $this->status = (int) $code;
+
+        return $this;
+    }
+
+    /**
+     * COOKIE 信息组件实例。
+     *
+     * @var ZenWebApp\ICookies
+     */
+    protected $cookies;
+
+    /**
+     * {@inheritdoc}
+     *
+     * @param  ZenWebApp\ICookies $cookies
+     * @return self
+     */
+    public function withCookies(ZenWebApp\ICookies $cookies)
+    {
+        $this->cookies = $cookies;
+
+        return $this;
+    }
+
+    /**
+     * {inheritdoc}
+     *
+     * @return void
+     */
+    protected function onClose()
+    {
+        $s_status = $this->getStatusText();
+        header('Status: ' . $s_status, true, $this->status);
+        if ($this->cookies) {
+            $this->cookies->save($this);
+        }
+        foreach ($this->headers as $kk => $vv) {
+            if (1 == count($vv)) {
+                header($kk . ': ' . $vv[0], true, $this->status);
+                continue;
+            }
+            foreach ($vv as $ww) {
+                header($kk . ': ' . $ww, false, $this->status);
+            }
+        }
     }
 
     /**
@@ -78,7 +143,7 @@ class Response extends ZenCoreApp\Output\Output implements ZenWebApp\IResponse
      *
      * @return string
      */
-    protected function status()
+    protected function getStatusText()
     {
         switch ($this->status) {
             case 100:
@@ -166,51 +231,5 @@ class Response extends ZenCoreApp\Output\Output implements ZenWebApp\IResponse
             default:
                 return $this->status . ' Unknown';
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param  string $field    头字段名
-     * @param  string $value    信息值
-     * @param  bool   $multiply 可选。是否发送重名头信息
-     * @return self
-     */
-    final public function header($field, $value, $multiply = false)
-    {
-        if (!$multiply || !array_key_exists($field, $this->headers)) {
-            $this->headers[$field] = array($value);
-        } else {
-            $this->headers[$field][] = $value;
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param  string $uri         目标 URI
-     * @param  bool   $permanently 可选。是否为永久跳转
-     * @return self
-     */
-    final public function redirect($uri, $permanently = false)
-    {
-        return $this->state($permanently ? self::STATUS_MOVED_PERMANENTLY : self::STATUS_FOUND)
-            ->header('Location', $uri)
-            ->close();
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @param  int  $code 新状态值
-     * @return self
-     */
-    final public function state($code)
-    {
-        $this->status = (int) $code;
-
-        return $this;
     }
 }

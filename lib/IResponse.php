@@ -326,4 +326,12 @@ interface IResponse extends ZenApp\IOutput
      * @return self
      */
     public function state($code);
+
+    /**
+     * 关联 COOKIE 信息组件实例。
+     *
+     * @param  ICookies $cookies
+     * @return self
+     */
+    public function withCookies(ICookies $cookies);
 }
