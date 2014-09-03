@@ -54,7 +54,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
         if (!is_array($this->meta)) {
             $this->meta = array('' => crypt(mt_rand(), mt_rand()));
         }
-        $this->changes = array();
+        $this->diff = array();
     }
 
     /**
