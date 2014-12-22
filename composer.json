@@ -1,9 +1,10 @@
 {
     "name": "zen/web-application",
-    "description": "Web Application support of Zen framework.",
-    "version": "0.1.0-dev",
+    "description": "Zen 框架网页应用程序包。",
+    "type": "library",
     "keywords": [
-        "zen"
+        "zen",
+        "web"
     ],
     "license": "LGPL-3.0+",
     "authors": [
