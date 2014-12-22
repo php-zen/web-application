@@ -45,6 +45,32 @@ class Request extends ZenCoreApp\Input\Input implements ZenWebApp\IRequest
     }
 
     /**
+     * {@inheritdoc}
+     *
+     * @param  string $abbr 命名空间缩写
+     * @return string
+     */
+    protected function guessAbbr($abbr)
+    {
+        $abbr = parent::guessAbbr($abbr);
+        switch ($abbr) {
+            case 'g':
+            case 'ge':
+                return 'get';
+            case 'p':
+            case 'po':
+            case 'pos':
+                return 'post';
+            case 'f':
+            case 'fi':
+            case 'fil':
+                return 'file';
+        }
+
+        return $abbr;
+    }
+
+    /**
      * 对象化上传文件信息。
      *
      * @param  array                 $value 上传文件信息
