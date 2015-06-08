@@ -28,7 +28,10 @@ class Request extends ZenCoreApp\Input\Input implements ZenWebApp\IRequest
     {
         parent::__construct();
         $this->params['get'] = $_GET;
-        if ($this->params['server']['HTTP_CONTENT_LENGTH'] && empty($_POST)) {
+        if (isset($this->params['server']['HTTP_CONTENT_LENGTH']) &&
+            $this->params['server']['HTTP_CONTENT_LENGTH'] &&
+            empty($_POST)
+        ) {
             if (!isset($this->params['server']['HTTP_CONTENT_TYPE'])) {
                 parse_str(file_get_contents('php://input'), $_POST);
             } elseif ('application/json' == $this->params['server']['HTTP_CONTENT_TYPE']) {
