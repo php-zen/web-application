@@ -34,7 +34,7 @@ class Request extends ZenCoreApp\Input\Input implements ZenWebApp\IRequest
         ) {
             if (!isset($this->params['server']['HTTP_CONTENT_TYPE'])) {
                 parse_str(file_get_contents('php://input'), $_POST);
-            } elseif ('application/json' == $this->params['server']['HTTP_CONTENT_TYPE']) {
+            } elseif (preg_match('#^application/json[ ;]?#', $this->params['server']['HTTP_CONTENT_TYPE'])) {
                 $_POST = json_decode(file_get_contents('php://input'));
             }
         }
