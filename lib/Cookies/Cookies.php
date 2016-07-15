@@ -3,7 +3,7 @@
  * 定义 Web 应用程序的 HTTP COOKIE 组件。
  *
  * @author    Snakevil Zen <zsnakevil@gmail.com>
- * @copyright © 2014 SZen.in
+ * @copyright © 2016 SZen.in
  * @license   LGPL-3.0+
  */
 
@@ -15,8 +15,8 @@ use Zen\Web\Application as ZenWebApp;
 /**
  * Web 应用程序的 HTTP COOKIE 组件。
  *
- * @package Zen\Web\Application
  * @version 0.1.0
+ *
  * @since   0.1.0
  */
 class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
@@ -43,7 +43,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     protected $diff;
 
     /**
-     * 构造函数
+     * 构造函数.
      */
     public function __construct()
     {
@@ -60,7 +60,8 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 检查 COOKIE 是否存在。
      *
-     * @param  scalar $offset 名称
+     * @param scalar $offset 名称
+     *
      * @return bool
      */
     public function offsetExists($offset)
@@ -71,7 +72,8 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 获取 COOKIE 值。
      *
-     * @param  scalar $offset 名称
+     * @param scalar $offset 名称
+     *
      * @return mixed
      */
     public function offsetGet($offset)
@@ -98,8 +100,9 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 解码值。
      *
-     * @param  string $name  名称
-     * @param  string $value 代码
+     * @param string $name  名称
+     * @param string $value 代码
+     *
      * @return mixed
      */
     protected function decodeValue($name, $value)
@@ -113,7 +116,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
                     $i_offs = $this->meta[$name][0]
                         ? ord($this->meta[$name][0][1]) % $i_lens
                         : 0;
-                    for ($ii = 0; $ii < $i_lend; $ii++) {
+                    for ($ii = 0; $ii < $i_lend; ++$ii) {
                         $jj = ($ii + $i_offs) % $i_lens;
                         $value[$ii] = chr(ord($value[$ii]) ^ ord($this->meta[''][$jj]));
                     }
@@ -131,8 +134,9 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 解码过期时间。
      *
-     * @param  string                $name COOKIE 名
-     * @param  string                $code 代码
+     * @param string $name COOKIE 名
+     * @param string $code 代码
+     *
      * @return ZenCore\Type\DateTime
      *
      * @throws ExIllegalExpiration 当过期时间解码失败时
@@ -153,9 +157,8 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 添加或更改 COOKIE 。
      *
-     * @param  scalar $offset 名称
-     * @param  mixed  $value  新值
-     * @return void
+     * @param scalar $offset 名称
+     * @param mixed  $value  新值
      */
     public function offsetSet($offset, $value)
     {
@@ -170,14 +173,15 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
             $this->encodeExpiration($value->getExpiration()),
             $value->getPath(),
             $value->getDomain(),
-            ($value instanceof Cookie\SecretCookie) << 2 | !is_scalar($value->getValue()) << 1 | $value->getSecure()
+            ($value instanceof Cookie\SecretCookie) << 2 | !is_scalar($value->getValue()) << 1 | $value->getSecure(),
         );
     }
 
     /**
      * 编码过期时间。
      *
-     * @param  ZenCore\Type\DateTime $expire 过期时间
+     * @param ZenCore\Type\DateTime $expire 过期时间
+     *
      * @return string
      */
     protected function encodeExpiration($expire)
@@ -190,8 +194,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 删除 COOKIE 。
      *
-     * @param  scalar $offset 名称
-     * @return void
+     * @param scalar $offset 名称
      *
      * @throws ExCookieMetaMissing 当 COOKIE 元信息丢失时
      */
@@ -215,23 +218,24 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * {@inheritdoc}
      *
-     * @param  ZenWebApp\IResponse $response
+     * @param ZenWebApp\IResponse $response
+     *
      * @return self
      */
     public function save(ZenWebApp\IResponse $response)
     {
         /** @var $jj Cookie\Cookie **/
         foreach ($this->diff as $ii => $jj) {
-            $a_cookie = array($ii . '=' . $this->encodeValue($ii, $jj->getValue()));
+            $a_cookie = array($ii.'='.$this->encodeValue($ii, $jj->getValue()));
             if (null !== $jj->getExpiration()) {
-                $a_cookie[] = 'expire=' . $jj->getExpiration()->format(DATE_COOKIE);
-                $a_cookie[] = 'Max-age=' . max(0, $jj->getExpiration()->getTimestamp() - time());
+                $a_cookie[] = 'expire='.$jj->getExpiration()->format(DATE_COOKIE);
+                $a_cookie[] = 'Max-age='.max(0, $jj->getExpiration()->getTimestamp() - time());
             }
             if ($jj->getPath()) {
-                $a_cookie[] = 'path=' . $jj->getPath();
+                $a_cookie[] = 'path='.$jj->getPath();
             }
             if ($jj->getDomain()) {
-                $a_cookie[] = 'domain=' . $jj->getDomain();
+                $a_cookie[] = 'domain='.$jj->getDomain();
             }
             if ($jj->getSecure()) {
                 $a_cookie[] = 'secure';
@@ -244,7 +248,7 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
                 $a_cookie[] = 'expire=Thu, 01-Jan-1970 00:00:00 GMT';
                 $a_cookie[] = 'Max-age=0';
             } else {
-                $a_cookie = array('_zcmt_=' . $this->quote(json_encode($this->meta)));
+                $a_cookie = array('_zcmt_='.$this->quote(json_encode($this->meta)));
                 $a_cookie[] = 'expire=Thu, 31-Dec-2037 23:55:55 GMT';
             }
             $response->header('Set-Cookie', implode('; ', $a_cookie), true);
@@ -256,8 +260,9 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 编码值。
      *
-     * @param  string $name  名称。
-     * @param  mixed  $value 值。
+     * @param string $name  名称。
+     * @param mixed  $value 值。
+     *
      * @return string
      *
      * @throws ExCookieTooLong 当 COOKIE 值过长时
@@ -277,14 +282,14 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
             $i_offs = $this->meta[$name][0]
                 ? ord($this->meta[$name][0][1]) % $i_lens
                 : 0;
-            for ($ii = 0; $ii < $i_lend; $ii++) {
+            for ($ii = 0; $ii < $i_lend; ++$ii) {
                 $jj = ($ii + $i_offs) % $i_lens;
                 $value[$ii] = chr(ord($value[$ii]) ^ ord($this->meta[''][$jj]));
             }
             $value = rtrim(base64_encode($value), '=');
         }
-        $value = quote($value);
-        if (4094 < strlen($name . $value)) {
+        $value = $this->quote($value);
+        if (4094 < strlen($name.$value)) {
             throw new ExCookieTooLong($name);
         }
 
@@ -294,7 +299,8 @@ class Cookies extends ZenCore\Component implements ZenWebApp\ICookies
     /**
      * 转义字符串以确保 COOKIE 读写成功。
      *
-     * @param  string $clob
+     * @param string $clob
+     *
      * @return string
      */
     protected function quote($clob)
