@@ -1,7 +1,6 @@
-/*
+*
 
 !.gitignore
-!composer.json
-
 !lib/
 !share/
+!composer.json

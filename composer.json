@@ -6,6 +6,7 @@
         "zen",
         "web"
     ],
+    "homepage": "https://github.com/php-zen/web-application",
     "license": "LGPL-3.0+",
     "authors": [
         {
@@ -17,6 +18,9 @@
     "require": {
         "zen/core": "*"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^5.4"
+    },
     "autoload": {
         "psr-4": {
             "Zen\\Web\\Application\\": "lib/"
@@ -26,6 +30,16 @@
         "psr-4": {
             "ZenTest\\Web\\Application\\": "share/test/"
         }
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    },
+    "config": {
+        "vendor-dir": "include",
+        "bin-dir": "bin"
     },
     "archive": {
         "exclude": [
