@@ -233,7 +233,7 @@ class Cookie extends ZenCore\Component
             return '';
         }
         $s_blob = "\x1";
-        if (static::SESSION != $this->expire) {
+        if (!is_int($this->expire) || static::SESSION != $this->expire) {
             if (!$this->expire->getTimestamp()) {
                 return '';
             }
@@ -243,9 +243,11 @@ class Cookie extends ZenCore\Component
         $s_blob .= chr(strlen($s_part)).$s_part;
         $s_part = rtrim(substr($this->domain, 0, -strlen($this->root)), '.');
         $s_blob .= chr(strlen($s_part)).$s_part;
-        $s_part = is_scalar($this->value) ?
-            $this->value :
-            serialize($this->value);
+        $s_part = $this->encode(
+            is_scalar($this->value) ?
+                $this->value :
+                serialize($this->value)
+        );
         $s_blob .= $s_part;
         $s_part = "\x0".gzdeflate($s_blob, 9);
         if (strlen($s_blob) > strlen($s_part)) {
@@ -257,6 +259,35 @@ class Cookie extends ZenCore\Component
         }
 
         return $s_blob;
+    }
+
+    /**
+     * 对数据编码。
+     *
+     * @param string $blob
+     *
+     * @return string
+     */
+    protected function encode($blob)
+    {
+        $s_ret = '';
+        for ($ii = 0, $jj = strlen($blob); $ii < $jj; ++$ii) {
+            $s_ret .= chr(0x81 ^ ord($blob[$ii]));
+        }
+
+        return $s_ret;
+    }
+
+    /**
+     * 对数据解码。
+     *
+     * @param string $code
+     *
+     * @return string
+     */
+    protected function decode($code)
+    {
+        return $this->encode($code);
     }
 
     /**
@@ -285,7 +316,14 @@ class Cookie extends ZenCore\Component
                 return array();
             }
         }
-        $a_cmds[] = $this->format($this->package, static::SESSION == $this->expire ? $o_1 : $this->expire, $this->path, $this->domain);
+        $a_cmds[] = $this->format(
+            $this->package,
+            is_int($this->expire) && static::SESSION == $this->expire ?
+                $o_1 :
+                $this->expire,
+            $this->path,
+            $this->domain
+        );
 
         return $a_cmds;
     }
@@ -354,7 +392,7 @@ class Cookie extends ZenCore\Component
             if ($m_tmp) {
                 $o_ret->domain = substr($s_raw, 1, $m_tmp).'.'.$o_ret->root;
             }
-            $s_raw = substr($s_raw, 1 + $m_tmp);
+            $s_raw = $o_ret->decode(substr($s_raw, 1 + $m_tmp));
             if (isset($s_raw[1]) && ':' == $s_raw[1]) {
                 $m_tmp = @unserialize($s_raw);
                 if (!$m_tmp) {
