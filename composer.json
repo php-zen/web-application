@@ -41,6 +41,12 @@
         "vendor-dir": "include",
         "bin-dir": "bin"
     },
+    "scripts": {
+        "test": [
+            "@composer install",
+            "phpunit --testdox"
+        ]
+    },
     "archive": {
         "exclude": [
             "/share",

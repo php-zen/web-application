@@ -1,0 +1,8 @@
+<phpunit>
+  <testsuites>
+    <testsuite name="Cookies">
+      <file>share/test/Cookies/Cookie/CookieTest.php</file>
+      <file>share/test/Cookies/CookiesTest.php</file>
+    </testsuite>
+  </testsuites>
+</phpunit>
