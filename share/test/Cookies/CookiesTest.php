@@ -143,7 +143,7 @@ class CookiesTest extends PHPUnit_Framework_TestCase implements ZenApp\IRequest,
     protected function setUp()
     {
         $this->headers = array();
-        $_COOKIES = array();
+        $_COOKIE = array();
     }
 
     public function testArrayAccess()
@@ -160,13 +160,13 @@ class CookiesTest extends PHPUnit_Framework_TestCase implements ZenApp\IRequest,
 
     public function testClonedFromCookies()
     {
-        $_COOKIES = array(
+        $_COOKIE = array(
             'foo' => 'bar',
         );
         $o_obj = new Unit($this);
         $this->assertTrue(isset($o_obj['foo']));
         unset($o_obj['foo']);
-        $this->assertArrayHasKey('foo', $_COOKIES);
+        $this->assertArrayHasKey('foo', $_COOKIE);
     }
 
     public function testAdding()
@@ -181,7 +181,7 @@ class CookiesTest extends PHPUnit_Framework_TestCase implements ZenApp\IRequest,
 
     public function testPurging()
     {
-        $_COOKIES = array(
+        $_COOKIE = array(
             'foo' => 'bar',
         );
         $o_obj = new Unit($this);
