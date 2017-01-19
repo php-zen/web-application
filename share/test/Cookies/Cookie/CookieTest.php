@@ -287,4 +287,39 @@ class CookieTest extends PHPUnit_Framework_TestCase implements ZenApp\IRequest
         $this->assertEquals('foo=zen; expire=Thursday, 01-Jan-1970 00:00:00 UTC; max-age=0; path=/; domain=szen.in', $a_q[0]);
         $this->assertRegExp('#^foo=[\da-zA-Z%/]+; path=/bar; domain=szen\.in$#', $a_q[1]);
     }
+
+    public function testAnyScalarValueCanBeUsed()
+    {
+        $i_value = rand();
+        $o_src = new Unit('foo', $this);
+        $o_src->value = $i_value;
+        $a_q = $o_src->export();
+        $this->assertTrue(0 < count($a_q));
+        $s_data = preg_replace('#^foo=([^;]+);.*$#', '$1', $a_q[0]);
+        $o_dst = Unit::import('bar', $s_data, $this);
+        $this->assertEquals($i_value, $o_dst->value);
+    }
+
+    public function testZeroNotEmpty()
+    {
+        $o_src = new Unit('foo', $this);
+        $o_src->value = 0;
+        $a_q = $o_src->export();
+        $this->assertTrue(0 < count($a_q));
+        $s_data = preg_replace('#^foo=([^;]+);.*$#', '$1', $a_q[0]);
+        $o_dst = Unit::import('bar', $s_data, $this);
+        $this->assertEquals(0, $o_dst->value);
+    }
+
+    public function testObjectsAlsoCanBeUsed()
+    {
+        $o_data = json_decode('{"a":'.rand().'}');
+        $o_src = new Unit('foo', $this);
+        $o_src->value = $o_data;
+        $a_q = $o_src->export();
+        $s_data = preg_replace('#^foo=([^;]+);.*$#', '$1', $a_q[0]);
+        $o_dst = Unit::import('bar', $s_data, $this);
+        $this->assertInstanceOf('stdCLass', $o_dst->value);
+        $this->assertObjectHasAttribute('a', $o_dst->value);
+    }
 }

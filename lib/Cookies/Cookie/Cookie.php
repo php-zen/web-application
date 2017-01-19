@@ -126,7 +126,7 @@ class Cookie extends ZenCore\Component
      */
     public function setExpire($expire)
     {
-        if (static::SESSION != $expire && !$expire instanceof DateTime) {
+        if (!$expire instanceof DateTime && static::SESSION != $expire) {
             $expire = new ZenCore\Type\DateTime($expire);
         }
         $this->expire = $expire;
@@ -229,7 +229,7 @@ class Cookie extends ZenCore\Component
      */
     protected function pack()
     {
-        if (!$this->value) {
+        if (null === $this->value || '' === $this->value) {
             return '';
         }
         $s_blob = "\x1";
@@ -245,7 +245,7 @@ class Cookie extends ZenCore\Component
         $s_blob .= chr(strlen($s_part)).$s_part;
         $s_part = $this->encode(
             is_scalar($this->value) ?
-                $this->value :
+                (string) $this->value :
                 serialize($this->value)
         );
         $s_blob .= $s_part;
