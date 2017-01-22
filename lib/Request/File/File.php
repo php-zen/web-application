@@ -3,7 +3,7 @@
  * 定义 Web 应用程序的上传文件信息组件。
  *
  * @author    Snakevil Zen <zsnakevil@gmail.com>
- * @copyright © 2014 SZen.in
+ * @copyright © 2017 SZen.in
  * @license   LGPL-3.0+
  */
 
@@ -14,10 +14,6 @@ use Zen\Web\Application;
 
 /**
  * Web 应用程序的上传文件信息组件。
- *
- * @package Zen\Web\Application
- * @version 0.1.0
- * @since   0.1.0
  *
  * @property-read string $name 文件名
  * @property-read string $type 文件类型
@@ -62,7 +58,7 @@ class File extends ZenCore\Component
     protected $path;
 
     /**
-     * 构造函数
+     * 构造函数.
      *
      * @param array                $value   $_FILES 结构数组
      * @param Application\IRequest $request 所属地 HTTP 请求组件实例
@@ -93,6 +89,23 @@ class File extends ZenCore\Component
     }
 
     /**
+     * {@inheritdoc}
+     *
+     * @param string $prop
+     *
+     * @return mixed
+     */
+    protected function zenGet($prop)
+    {
+        switch ($prop) {
+            case 'name':
+            case 'type':
+            case 'size':
+                return $this->$prop;
+        }
+    }
+
+    /**
      * 字符串类型转换。
      *
      * @return string
@@ -105,8 +118,9 @@ class File extends ZenCore\Component
     /**
      * 移动文件至指定位置。
      *
-     * @param  string $directory 目标文件夹
-     * @param  string $name      可选。新文件名
+     * @param string $directory 目标文件夹
+     * @param string $name      可选。新文件名
+     *
      * @return bool
      */
     public function move($directory, $name = '')
@@ -117,7 +131,7 @@ class File extends ZenCore\Component
         if (!is_dir($directory) && !@mkdir($directory, 0775, true)) {
             return false;
         }
-        $p_file = $directory . '/' . $name;
+        $p_file = $directory.'/'.$name;
         if (!move_uploaded_file($this->path, $p_file)) {
             return false;
         }
